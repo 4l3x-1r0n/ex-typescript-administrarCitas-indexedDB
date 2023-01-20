@@ -7,7 +7,8 @@ import {
     hora_input,
     sintomas_input
 } from "../selectores.js";
-import { cargarCitas, agregarCita, fillCitaObj } from "../funciones.js";
+
+import { agregarCita, fillCitaObj } from "../funciones.js";
 
 //Regitrar eventos
 export class App {
@@ -16,7 +17,9 @@ export class App {
     }
 
     initApp() {
-        document.addEventListener("DOMContentLoaded", cargarCitas);
+        //document.addEventListener("DOMContentLoaded", cargarCitas);
+        //window.onload hace lo mismo que el event slistener DOMContentLoaded
+        // window.onload = cargarCitas;
 
         form.addEventListener("submit", agregarCita);
 

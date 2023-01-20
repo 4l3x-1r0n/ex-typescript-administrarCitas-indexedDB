@@ -1,4 +1,4 @@
-import { Cita } from "./Citas.js";
+import { ICita } from "./ICitas.js";
 import { editarCita, eliminaCita } from "../funciones.js";
 import { citasContainer_ul } from "../selectores.js";
 
@@ -18,7 +18,7 @@ export class UI {
         }, 3000);
     }
 
-    showCitas(citas: Cita[]) {
+    showCitas(citas: ICita[]) {
         this.resetHtmlCitas();
         citas.forEach((cita) => {
             const { id, mascota, propietario, telefono, fecha, hora, sintomas } = cita;

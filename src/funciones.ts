@@ -1,15 +1,10 @@
-import { Cita, Citas } from "./class/Citas.js";
+import { ICita } from "./class/ICitas.js";
 import { UI } from "./class/UI.js";
 import { form } from "./selectores.js";
+import { IndexDB } from "./class/IndexDB.js";
 
 
-let editando = false;
-
-const ui = new UI();
-
-const citas = new Citas();
-
-const citaObj: Cita = {
+const citaObj: ICita = {
     id: 0,
     mascota: "",
     propietario: "",
@@ -19,8 +14,19 @@ const citaObj: Cita = {
     sintomas: ""
 };
 
+let editando = false;
+
+const ui = new UI();
+
+let citas: ICita[] = [];
+
+const citasDB = new IndexDB("Citas", { ...citaObj }, 1, cargarCitas);//inicializamos la base de datos, el ultimo parametro es una funcion que se ejecuta cuando la base de datos este preparada
+
 export function cargarCitas() {
-    console.log("cagando citas");
+    citasDB.loadCitas().then((result) => {
+        citas = result;
+        ui.showCitas(citas);
+    });
 }
 
 
@@ -44,20 +50,31 @@ export function agregarCita(e: Event) {
     }
 
     if (editando) {
-        citas.editCita({ ...citaObj });
-        ui.showAlert("Editado Correctamente", "success");
-        (form.querySelector("button[type=\"submit\"]") as HTMLButtonElement).textContent = "Crear Cita";
-        editando = false;
+        citasDB.editCita({ ...citaObj }).then((_citas) => {
+            citas = _citas;
+            //citas.editCita({ ...citaObj });
+            ui.showAlert("Editado Correctamente", "success");
+            (form.querySelector("button[type=\"submit\"]") as HTMLButtonElement).textContent = "Crear Cita";
+            editando = false;
+
+            citaObjRestart();
+            ui.showCitas(citas);
+
+            form.reset();
+        });
     } else {
-        citas.addCita({ ...citaObj });//usamos el spread operator para mandar una copia del objeto, si no lo hacemos asi y solo ponemos el nombre del objeto, entonces estaremos mandando una referencia al objero y como es global, cuando cambiemos dicho objeto, todas las referencias a el tendran los valores nuevos del objeto, y no es lo que queremos, necesitamos ir gusrdado las propiedades del objeto a medida que va cambieando, entonces lo que hacemos es guaedar una copia del objeto en cada momento
-        ui.showAlert("Se agregó correctamente", "success");
+        //usamos el spread operator para mandar una copia del objeto, si no lo hacemos asi y solo ponemos el nombre del objeto, entonces estaremos mandando una referencia al objero y como es global, cuando cambiemos dicho objeto, todas las referencias a el tendran los valores nuevos del objeto, y no es lo que queremos, necesitamos ir gusrdado las propiedades del objeto a medida que va cambieando, entonces lo que hacemos es guaedar una copia del objeto en cada momento
+        citasDB.addCita({ ...citaObj }).then((_citas) => {
+            citas = _citas;
+
+            ui.showAlert("Se agregó correctamente", "success");
+
+            citaObjRestart();
+            ui.showCitas(citas);
+
+            form.reset();
+        });
     }
-
-
-    citaObjRestart();
-    ui.showCitas(citas.citas);
-
-    form.reset();
 }
 
 function citaObjRestart() {
@@ -67,11 +84,14 @@ function citaObjRestart() {
 }
 
 export function eliminaCita(id: number) {
-    citas.removeCita(id);
-    ui.showCitas(citas.citas);
+    citasDB.removeCita(id).then((_citas) => {
+        citas = _citas;
+        //citas.removeCita(id);
+        ui.showCitas(citas);
+    });
 }
 
-export function editarCita(cita: Cita) {
+export function editarCita(cita: ICita) {
     for (const index in cita) {
         citaObj[index] = cita[index];
         const element = document.querySelector(`form [name=${index}`) as HTMLInputElement;
